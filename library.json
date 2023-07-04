@@ -1,0 +1,20 @@
+{
+    "name": "STK8BA58",
+    "version": "1.0.0",
+    "description": "A library for the AK4619VN audio CODEC",
+    "keywords": "i2c, audio, I2S, esp32",
+    "authors": [
+        {
+            "name": "trimen",
+            "email": "trimen@taktpraha.cz",
+            "maintainer": true
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/username/AK4619VN"
+    },
+    "frameworks": "arduino",
+    "platforms": "espressif32",
+    "examples": "examples/*/*.ino"
+}
