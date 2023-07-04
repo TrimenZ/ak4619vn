@@ -410,7 +410,7 @@ uint8_t AK4619VN::writeReg(uint8_t deviceReg, uint8_t regVal) {
     m_i2c->write(regVal);
     m_i2c->endTransmission(true);
     
-    return return false;
+    return false;
 }
 
 uint8_t AK4619VN::readReg(uint8_t deviceReg, uint8_t * regVal) {
@@ -423,7 +423,7 @@ uint8_t AK4619VN::readReg(uint8_t deviceReg, uint8_t * regVal) {
     * regVal = m_i2c->read();
     m_i2c->endTransmission(true);
     
-    return return false;
+    return false;
 }
 
 uint8_t AK4619VN::readRegMulti(uint8_t startReg, uint8_t len, uint8_t * vals) {
@@ -437,7 +437,7 @@ uint8_t AK4619VN::readRegMulti(uint8_t startReg, uint8_t len, uint8_t * vals) {
     vals[i] = m_i2c->read();
   }
     
-    return return false;
+    return false;
 }
 
 
