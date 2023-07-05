@@ -59,7 +59,7 @@ void setup() {
     Serial.println("Unable to set DAC input conf");
   }
   
-  error = codec.outputConf(AK4619VN::AK_OUT_SDIN2, AK4619VN::AK_OUT_SDIN1); // DAC1 to SDOUT1, DAC2 to SDOUT2
+  error = codec.outputConf(AK4619VN::AK_OUT_SDIN2, AK4619VN::AK_OUT_SDIN1); //DAC2 to SDOUT2, DAC1 to SDOUT1
   if(error){
     Serial.println("Unable to set DAC input conf");
   }
@@ -71,7 +71,8 @@ void setup() {
   
   delay(100);
   Serial.println("Setup done");
-
+  
+  //Verify settings
   codec.printRegs(0x0, 21);
   
 }

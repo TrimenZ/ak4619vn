@@ -136,9 +136,23 @@ public:
 private:
     TwoWire *_wirePort;
     uint8_t _i2cAddress;
+   
+#if ESP_ARDUINO_VERSION_MAJOR == 1
+    //For Arduino-ESP32 v1+
+    uint8_t writeRegOld(uint8_t deviceReg, uint8_t regVal);
+    uint8_t readRegOld(uint8_t deviceReg, uint8_t * regVal);
+    uint8_t readRegMultiOld(uint8_t startReg, uint8_t len, uint8_t * vals);
+#endif
+
+    
+#if ESP_ARDUINO_VERSION_MAJOR == 2 || not defined ESP_ARDUINO_VERSION_MAJOR
+    //For Arduino-ESP32 v2+
+    //Use as default for non-ESP32 platforms
     uint8_t writeReg(uint8_t deviceReg, uint8_t regVal);
     uint8_t readReg(uint8_t deviceReg, uint8_t * regVal);
     uint8_t readRegMulti(uint8_t startReg, uint8_t len, uint8_t * vals);
+#endif
+    
     uint8_t modifyGainRange(int16_t inVal, uint8_t regVal);
     uint8_t checkGainRange(int16_t inVal);
     TwoWire *m_i2c;
