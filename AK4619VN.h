@@ -145,7 +145,7 @@ private:
 #endif
 
     
-#if ESP_ARDUINO_VERSION_MAJOR == 2 || not defined ESP_ARDUINO_VERSION_MAJOR
+#if ESP_ARDUINO_VERSION_MAJOR == 2 || not defined ESP_ARDUINO_VERSION_MAJOR //Default for non-ESP32 platforms
     //For Arduino-ESP32 v2+
     //Use as default for non-ESP32 platforms
     uint8_t writeReg(uint8_t deviceReg, uint8_t regVal);
