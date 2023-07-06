@@ -4,24 +4,23 @@
 #warning This library is tested only on the Arduino ESP32 platform, version 1.x.x and 2.x.x
 #endif
 
-
 AK4619VN::AK4619VN(TwoWire *i2c, uint8_t i2cAddress) {
-    if(i2c == NULL){
-        while(1);
-    }
-    
-    m_i2c = i2c;
-    m_addr = i2cAddress;
+  if(i2c == NULL){
+    while(1);
+  }
+  
+  m_i2c = i2c;
+  m_addr = i2cAddress;
 }
 
 void AK4619VN::begin(uint8_t SDA, uint8_t SCL ) {
-    m_i2c->begin(SDA, SCL);
-    //m_i2c->setPins(SDA, SCL);
-    //m_i2c->begin();
+  m_i2c->begin(SDA, SCL);
+  //m_i2c->setPins(SDA, SCL);
+  //m_i2c->begin();
 }
 
 void AK4619VN::begin(void){
-    m_i2c->begin();
+  m_i2c->begin();
 }
 
 
@@ -132,7 +131,7 @@ uint8_t AK4619VN::audioFormatSlotLen(data_bit_length_t IDL, data_bit_length_t OD
   
   regval &= 0xF0;
   regval |= tempval;
-
+  
   
   return (writeReg(AUDFORM2, regval));
   
@@ -197,8 +196,6 @@ uint8_t AK4619VN::sysClkSet(clk_fs_t FS, bool BICKEdg, bool SDOPH){
   return (writeReg(AUDFORM1, regval));
 }
 
-
-//Set ADC input gain
 uint8_t AK4619VN::inputGain(input_gain_t ADC1L, input_gain_t ADC1R, input_gain_t ADC2L, input_gain_t ADC2R){
   
   uint8_t regval0 = 0;
@@ -217,6 +214,64 @@ uint8_t AK4619VN::inputGain(input_gain_t ADC1L, input_gain_t ADC1R, input_gain_t
   
 }
 
+//Set ADC input gain
+const uint8_t InputGain_map[] = {
+  AK4619VN::AK_INGAIN_N6DB,
+  AK4619VN::AK_INGAIN_N3DB,
+  AK4619VN::AK_INGAIN_0DB,
+  AK4619VN::AK_INGAIN_3DB,
+  AK4619VN::AK_INGAIN_6DB,
+  AK4619VN::AK_INGAIN_9DB,
+  AK4619VN::AK_INGAIN_12DB,
+  AK4619VN::AK_INGAIN_15DB,
+  AK4619VN::AK_INGAIN_18DB,
+  AK4619VN::AK_INGAIN_21DB,
+  AK4619VN::AK_INGAIN_24DB,
+  AK4619VN::AK_INGAIN_27DB
+};
+
+uint8_t AK4619VN::inputGainChange(bool relative, bool ADC1L, bool ADC1R, bool ADC2L, bool ADC2R, int8_t gain){  
+  uint8_t regvals[2] = {0};
+  uint8_t regval0 = 0;
+  uint8_t regval1 = 0;
+  uint8_t error = 0;
+  
+  error = readRegMulti(MICGAIN1, 2, regvals); //Read output gain regvals
+  if(error){
+    return error;
+  }
+  
+  if( ADC1LGain_idx <= 0 )  ADC1LGain_idx = 0;
+  if( ADC1LGain_idx >= 12 )  ADC1LGain_idx = 12;
+  if( ADC1LGain_idx <= 0 )  ADC1LGain_idx = 12;
+  if( ADC1LGain_idx >= 12 ) ADC1LGain_idx = 12;
+  ADC1LGain_idx += gain;
+  ADC1LGain_idx += gain;
+  ADC1LGain_idx += gain;
+  ADC1LGain_idx += gain;
+  
+  if(relative){
+    
+    regval0 = (ADC1L << 4 | ADC1R);
+    regval1 = (ADC2L << 4 | ADC2R);
+    
+    error = writeReg(MICGAIN1, regval0);
+    if(error){
+      return error;
+    }
+    
+    return (writeReg(MICGAIN2, regval1));
+    
+  }
+  else{
+    if(ADC1L){
+      modifyGainRange(gain, ADC1LGain_idx);
+      regval0 = (ADC1L << 4 | ADC1R);
+    }
+  }
+  return 0;
+}
+
 //Set DAC output gain
 /*
  * relative - change gain relatively by gainVal
@@ -233,10 +288,9 @@ uint8_t AK4619VN::outputGain(bool relative, output_gain_t channel, int16_t gainV
   uint8_t regvals[4] = {0};
   uint8_t regval = 0;
   uint8_t error = 0;
-    
+  
   if(relative){
     error = readRegMulti(DAC1LVOL, 4, regvals); //Read output gain regvals
-    Serial.printf("Regvals:\t %i, %i, %i, %i\n\r", regvals[0], regvals[1], regvals[2], regvals[3]);
     
     if(error){
       return error;
@@ -410,120 +464,120 @@ uint8_t AK4619VN::printRegs(uint8_t startReg, uint8_t len){
     Serial.print("\t");
     Serial.print(regvals[idx], HEX);
     Serial.println();  // Prints a new line after printing the bits
-  
+    
   }
   
   return 0;
 }
-    
+
 #if ESP_ARDUINO_VERSION_MAJOR == 1
 uint8_t AK4619VN::writeRegOld(uint8_t deviceReg, uint8_t regVal) {
-    m_i2c->beginTransmission(m_addr);
-    m_i2c->write(deviceReg);
-    m_i2c->write(regVal);
-    m_i2c->endTransmission(true);
-    
-    return (m_i2c->lastError());
+  m_i2c->beginTransmission(m_addr);
+  m_i2c->write(deviceReg);
+  m_i2c->write(regVal);
+  m_i2c->endTransmission(true);
+  
+  return (m_i2c->lastError());
 }
 
 
 uint8_t AK4619VN::readRegOld(uint8_t deviceReg, uint8_t * regVal) {
-    m_i2c->beginTransmission(m_addr);
-    m_i2c->write(deviceReg);
-    m_i2c->endTransmission(true);
-    
-    m_i2c->beginTransmission(m_addr);
-    m_i2c->requestFrom((int8_t)m_addr, 1);
-    * regVal = m_i2c->read();
-    m_i2c->endTransmission(true);
-    
-    return (m_i2c->lastError());
+  m_i2c->beginTransmission(m_addr);
+  m_i2c->write(deviceReg);
+  m_i2c->endTransmission(true);
+  
+  m_i2c->beginTransmission(m_addr);
+  m_i2c->requestFrom((int8_t)m_addr, 1);
+  * regVal = m_i2c->read();
+  m_i2c->endTransmission(true);
+  
+  return (m_i2c->lastError());
 }
 
 
 uint8_t AK4619VN::readRegMultiOld(uint8_t startReg, uint8_t len, uint8_t * vals) {
-    m_i2c->beginTransmission(m_addr);
-    m_i2c->write(startReg);
-    m_i2c->endTransmission(false);
-    
-    m_i2c->requestFrom((int8_t)m_addr, (int8_t)len);
-    
-    for (uint8_t i = 0; i <= (len - 1); i++) {
+  m_i2c->beginTransmission(m_addr);
+  m_i2c->write(startReg);
+  m_i2c->endTransmission(false);
+  
+  m_i2c->requestFrom((int8_t)m_addr, (int8_t)len);
+  
+  for (uint8_t i = 0; i <= (len - 1); i++) {
     vals[i] = m_i2c->read();
   }
-    
-    return (m_i2c->lastError());
+  
+  return (m_i2c->lastError());
 }
 #endif
 
 #if ESP_ARDUINO_VERSION_MAJOR == 2
 uint8_t AK4619VN::writeReg(uint8_t deviceReg, uint8_t regVal) {
   
-    m_i2c->beginTransmission(m_addr);
-    m_i2c->write(deviceReg);
-    m_i2c->write(regVal);
-    return(m_i2c->endTransmission(true)); // Send STOP
+  m_i2c->beginTransmission(m_addr);
+  m_i2c->write(deviceReg);
+  m_i2c->write(regVal);
+  return(m_i2c->endTransmission(true)); // Send STOP
 }
 
 uint8_t AK4619VN::readReg(uint8_t deviceReg, uint8_t * regVal) {
-
-      m_i2c->beginTransmission(m_addr);
-      m_i2c->write(deviceReg);
-      m_i2c->endTransmission(true);
-      uint8_t t;
-      
-      uint8_t numbytes = 0;
-      numbytes = m_i2c->requestFrom(m_addr, (uint8_t)1, (uint8_t)false);
-      
-      if((bool)numbytes){
-        Wire.readBytes(regVal, numbytes);
-      }
-
-      return(m_i2c->endTransmission(true)); //Send STOP
+  
+  m_i2c->beginTransmission(m_addr);
+  m_i2c->write(deviceReg);
+  m_i2c->endTransmission(true);
+  uint8_t t;
+  
+  uint8_t numbytes = 0;
+  numbytes = m_i2c->requestFrom(m_addr, (uint8_t)1, (uint8_t)false);
+  
+  if((bool)numbytes){
+    Wire.readBytes(regVal, numbytes);
+  }
+  
+  return(m_i2c->endTransmission(true)); //Send STOP
 }
 
 uint8_t AK4619VN::readRegMulti(uint8_t startReg, uint8_t len, uint8_t * vals) {
   
-      m_i2c->beginTransmission(m_addr);
-      m_i2c->write(startReg);
-      m_i2c->endTransmission(false);
-      
-      uint8_t numbytes = 0;
-      numbytes = m_i2c->requestFrom((uint8_t)m_addr, len, (uint8_t)false);
-      
-      if((bool)numbytes){
-        Wire.readBytes(vals, numbytes);
-      }
-      
-      return(m_i2c->endTransmission(true)); //Send STOP
+  m_i2c->beginTransmission(m_addr);
+  m_i2c->write(startReg);
+  m_i2c->endTransmission(false);
+  
+  uint8_t numbytes = 0;
+  numbytes = m_i2c->requestFrom((uint8_t)m_addr, len, (uint8_t)false);
+  
+  if((bool)numbytes){
+    Wire.readBytes(vals, numbytes);
+  }
+  
+  return(m_i2c->endTransmission(true)); //Send STOP
 }
 #endif
 
 //Modify regVal by inVal, check for under/overflow and adjust regVal to min or max
 uint8_t AK4619VN::modifyGainRange(int16_t inVal, uint8_t regVal){
   if (inVal > 0 && (0xFF - regVal) < inVal) {
-        // Overflow occurred, return maximum value
-        return 0xFF;
-    } else if (inVal < 0 && regVal < (-inVal)) {
-        // Underflow occurred, return minimum value
-        return 0;
-    } else {
-        // No overflow or underflow, perform the update
-        return regVal + inVal;
-    }
+    // Overflow occurred, return maximum value
+    return 0xFF;
+  } else if (inVal < 0 && regVal < (-inVal)) {
+    // Underflow occurred, return minimum value
+    return 0;
+  } else {
+    // No overflow or underflow, perform the update
+    return regVal + inVal;
+  }
 }
 
 //Check if inVal is in range of uint8_t
 uint8_t AK4619VN::checkGainRange(int16_t inVal){
   if (inVal > 0xFF) {
-        // Value exceeds the maximum of uint8_t
-        return 0xFF;
-    } else if (inVal < 0) {
-        // Value is negative, return minimum value of uint8_t
-        return 0;
-    } else {
-        // Value is within the range of uint8_t, return as is
-        return (uint8_t)inVal;
-    }
+    // Value exceeds the maximum of uint8_t
+    return 0xFF;
+  } else if (inVal < 0) {
+    // Value is negative, return minimum value of uint8_t
+    return 0;
+  } else {
+    // Value is within the range of uint8_t, return as is
+    return (uint8_t)inVal;
+  }
 }
-  
+

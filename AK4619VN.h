@@ -35,14 +35,15 @@
 
 class AK4619VN {
 public:
+    
     AK4619VN(TwoWire *i2c, uint8_t i2cAddress = AK4619VN_ADDR); // Constructor
     void begin(uint8_t SDA, uint8_t SCL);
     void begin(void);
     
-     uint8_t setRstState(bool state);
-     uint8_t pwrMgm(bool ADC2, bool ADC1, bool DAC2, bool DAC1);
-     
-//###############
+    uint8_t setRstState(bool state);
+    uint8_t pwrMgm(bool ADC2, bool ADC1, bool DAC2, bool DAC1);
+    
+    //###############
     typedef enum{
         AK_24BIT = 0x0,
         AK_20BIT = 0x01,
@@ -77,7 +78,7 @@ public:
     uint8_t audioFormatSlotLen(data_bit_length_t IDL, data_bit_length_t ODL);
     uint8_t audioFormatMode(audio_iface_format_t FORMAT);
     uint8_t sysClkSet(clk_fs_t FS, bool BICKEdg, bool SDOPH);
-//###############    
+    //###############    
     typedef enum{
         AK_INGAIN_N6DB = 0x0,
         AK_INGAIN_N3DB = 0x01,
@@ -93,9 +94,11 @@ public:
         AK_INGAIN_27DB = 0x0B,
     } input_gain_t;
     
-    uint8_t inputGain(input_gain_t ADC1L, input_gain_t ADC1R, input_gain_t ADC2L, input_gain_t ADC2R);
     
-//###############
+    uint8_t inputGain(input_gain_t ADC1L, input_gain_t ADC1R, input_gain_t ADC2L, input_gain_t ADC2R);
+    uint8_t inputGainChange(bool relative, bool ADC1L, bool ADC1R, bool ADC2L, bool ADC2R, int8_t gain);
+    
+    //###############
     typedef enum{
         AK_DAC1B = 0x0,
         AK_DAC2B = 0x01,
@@ -106,10 +109,10 @@ public:
         AK_OUTGAIN_0DB = 0x30,
         AK_OUT_GAIN_MUTE = 0xFF,
     } output_gain_t;
-        
+    
     uint8_t outputGain(bool relative, output_gain_t channel, int16_t gainVal);
     
-//###############
+    //###############
     typedef enum{
         AK_IN_DIFF = 0x0,
         AK_IN_SE1 = 0x01,
@@ -118,8 +121,8 @@ public:
     } intput_conf_t;
     
     uint8_t inputConf(intput_conf_t ADC1L, intput_conf_t ADC1R, intput_conf_t ADC2L, intput_conf_t ADC2R);
-
-//###############
+    
+    //###############
     typedef enum{
         AK_OUT_SDIN1 = 0x0,
         AK_OUT_SDIN2 = 0x01,
@@ -132,26 +135,30 @@ public:
     uint8_t printRegs(uint8_t startReg, uint8_t len);
     
     
-    
 private:
     TwoWire *_wirePort;
     uint8_t _i2cAddress;
-   
-#if ESP_ARDUINO_VERSION_MAJOR == 1
+    
+    #if ESP_ARDUINO_VERSION_MAJOR == 1
     //For Arduino-ESP32 v1+
     uint8_t writeRegOld(uint8_t deviceReg, uint8_t regVal);
     uint8_t readRegOld(uint8_t deviceReg, uint8_t * regVal);
     uint8_t readRegMultiOld(uint8_t startReg, uint8_t len, uint8_t * vals);
-#endif
-
+    #endif
     
-#if ESP_ARDUINO_VERSION_MAJOR == 2 || not defined ESP_ARDUINO_VERSION_MAJOR //Default for non-ESP32 platforms
+    
+    #if ESP_ARDUINO_VERSION_MAJOR == 2 || not defined ESP_ARDUINO_VERSION_MAJOR //Default for non-ESP32 platforms
     //For Arduino-ESP32 v2+
     //Use as default for non-ESP32 platforms
     uint8_t writeReg(uint8_t deviceReg, uint8_t regVal);
     uint8_t readReg(uint8_t deviceReg, uint8_t * regVal);
     uint8_t readRegMulti(uint8_t startReg, uint8_t len, uint8_t * vals);
-#endif
+    #endif
+    
+    uint8_t ADC1LGain_idx = 2;
+    uint8_t ADC1RGain_idx = 2;
+    uint8_t ADC2LGain_idx = 2;
+    uint8_t ADC2RGain_idx = 2;
     
     uint8_t modifyGainRange(int16_t inVal, uint8_t regVal);
     uint8_t checkGainRange(int16_t inVal);
