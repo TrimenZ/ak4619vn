@@ -141,9 +141,9 @@ private:
     
     #if ESP_ARDUINO_VERSION_MAJOR == 1
     //For Arduino-ESP32 v1+
-    uint8_t writeReg(uint8_t deviceReg, uint8_t regVal);
-    uint8_t readReg(uint8_t deviceReg, uint8_t * regVal);
-    uint8_t readRegMulti(uint8_t startReg, uint8_t len, uint8_t * vals);
+    uint8_t writeRegOld(uint8_t deviceReg, uint8_t regVal);
+    uint8_t readRegOld(uint8_t deviceReg, uint8_t * regVal);
+    uint8_t readRegMultiOld(uint8_t startReg, uint8_t len, uint8_t * vals);
     #endif
     
     

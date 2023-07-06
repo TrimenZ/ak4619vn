@@ -471,7 +471,7 @@ uint8_t AK4619VN::printRegs(uint8_t startReg, uint8_t len){
 }
 
 #if ESP_ARDUINO_VERSION_MAJOR == 1
-uint8_t AK4619VN::writeReg(uint8_t deviceReg, uint8_t regVal) {
+uint8_t AK4619VN::writeRegOld(uint8_t deviceReg, uint8_t regVal) {
   m_i2c->beginTransmission(m_addr);
   m_i2c->write(deviceReg);
   m_i2c->write(regVal);
@@ -481,7 +481,7 @@ uint8_t AK4619VN::writeReg(uint8_t deviceReg, uint8_t regVal) {
 }
 
 
-uint8_t AK4619VN::readReg(uint8_t deviceReg, uint8_t * regVal) {
+uint8_t AK4619VN::readRegOld(uint8_t deviceReg, uint8_t * regVal) {
   m_i2c->beginTransmission(m_addr);
   m_i2c->write(deviceReg);
   m_i2c->endTransmission(true);
@@ -495,7 +495,7 @@ uint8_t AK4619VN::readReg(uint8_t deviceReg, uint8_t * regVal) {
 }
 
 
-uint8_t AK4619VN::readRegMulti(uint8_t startReg, uint8_t len, uint8_t * vals) {
+uint8_t AK4619VN::readRegMultiOld(uint8_t startReg, uint8_t len, uint8_t * vals) {
   m_i2c->beginTransmission(m_addr);
   m_i2c->write(startReg);
   m_i2c->endTransmission(false);
