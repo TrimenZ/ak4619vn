@@ -155,11 +155,6 @@ private:
     uint8_t readRegMulti(uint8_t startReg, uint8_t len, uint8_t * vals);
     #endif
     
-    uint8_t ADC1LGain_idx = 2;
-    uint8_t ADC1RGain_idx = 2;
-    uint8_t ADC2LGain_idx = 2;
-    uint8_t ADC2RGain_idx = 2;
-    
     uint8_t modifyGainRange(int16_t inVal, uint8_t regVal);
     uint8_t checkGainRange(int16_t inVal);
     TwoWire *m_i2c;

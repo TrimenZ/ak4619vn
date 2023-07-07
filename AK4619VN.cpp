@@ -1,7 +1,7 @@
 #include "AK4619VN.h"
 
 #ifndef ESP_ARDUINO_VERSION_MAJOR
-#warning This library is tested only on the Arduino ESP32 platform, version 1.x.x and 2.x.x
+#warning This library is tested only with the Arduino ESP32 platform, version 1.x.x and 2.x.x
 #endif
 
 AK4619VN::AK4619VN(TwoWire *i2c, uint8_t i2cAddress) {
@@ -15,8 +15,6 @@ AK4619VN::AK4619VN(TwoWire *i2c, uint8_t i2cAddress) {
 
 void AK4619VN::begin(uint8_t SDA, uint8_t SCL ) {
   m_i2c->begin(SDA, SCL);
-  //m_i2c->setPins(SDA, SCL);
-  //m_i2c->begin();
 }
 
 void AK4619VN::begin(void){
@@ -57,64 +55,40 @@ uint8_t AK4619VN::pwrMgm(bool ADC2, bool ADC1, bool DAC2, bool DAC1){
   //Check for RESET state of CODEC
   error = readReg(PWRMGM, &rstState);
   if(error){
-    Serial.println(error, DEC);
-    Serial.println("Unable to read PWR reg");
     return error;
   }
   
-  if( !((rstState >> 0) & 1) ){
-    Serial.println("Codec is in reset state");
-  }
+  //   if( !((rstState >> 0) & 1) ){
+  //     Serial.println("Codec is in reset state");
+  //   }
   
   return (writeReg(PWRMGM, regval));
   
 }
 
-// //Set audio format, I&O data length and MCLK and sample freq
-// /*
-//  * slot = 0 - LRCK edge | 1 - Slot length
-//  * IDL:
-//  * 00 - 24bit
-//  * 01 - 20bit
-//  * 10 - 16bit
-//  * 11 - 32bit
-//  * 
-//  * ODL:
-//  * Samle as IDL except
-//  * 11 - N/A
-//  * 
-//  * FS:
-//  * bits   MCLK    fs range
-//  * 000 - 256fs    8 kHz ≦ fs ≦ 48 kHz
-//  * 001 - 256fs    fs = 96 kHz
-//  * 010 - 384fs    8 kHz ≦ fs ≦ 48 kHz
-//  * 011 - 512fs    8 kHz ≦ fs ≦ 48 kHz
-//  * 1xx - 128fs    fs = 192 kHz
-//  * ** For all FS BICK in range 32, 48, 64, 128, 256fs
-//  * ** except 1xx which exclude 256fs
-//  */
-// 
-// uint8_t AK4619VN::audioFormatClk(bool TDM, bool slot, data_bit_length_t IDL, data_bit_length_t ODL){
-//   
-//   uint8_t regval0 = 0;
-//   uint8_t regval1 = 0;
-//   uint8_t error = 0;
-//   
-//   if(ODL == AK_32BIT){
-//     Serial.println("Invalid ODL settings");
-//   }
-//   
-//   regval0 = (slot <<4 | IDL << 3 | ODL);
-//   regval1 = FS;
-//   
-//   error = writeReg(AUDFORM1, regval0);
-//   if(error){
-//     return error;
-//   }
-//   
-//   return (writeReg(AUDFORM2, regval1));
-//   
-// }
+//Set audio format, I&O data length and MCLK and sample freq
+/*
+ * slot = 0 - LRCK edge | 1 - Slot length
+ * IDL:
+ * 00 - 24bit
+ * 01 - 20bit
+ * 10 - 16bit
+ * 11 - 32bit
+ * 
+ * ODL:
+ * Samle as IDL except
+ * 11 - N/A
+ * 
+ * FS:
+ * bits   MCLK    fs range
+ * 000 - 256fs    8 kHz ≦ fs ≦ 48 kHz
+ * 001 - 256fs    fs = 96 kHz
+ * 010 - 384fs    8 kHz ≦ fs ≦ 48 kHz
+ * 011 - 512fs    8 kHz ≦ fs ≦ 48 kHz
+ * 1xx - 128fs    fs = 192 kHz
+ * ** For all FS BICK in range 32, 48, 64, 128, 256fs
+ * ** except 1xx which exclude 256fs
+ */
 
 
 uint8_t AK4619VN::audioFormatSlotLen(data_bit_length_t IDL, data_bit_length_t ODL){
@@ -214,60 +188,70 @@ uint8_t AK4619VN::inputGain(input_gain_t ADC1L, input_gain_t ADC1R, input_gain_t
   
 }
 
-//Set ADC input gain
-const uint8_t InputGain_map[] = {
-  AK4619VN::AK_INGAIN_N6DB,
-  AK4619VN::AK_INGAIN_N3DB,
-  AK4619VN::AK_INGAIN_0DB,
-  AK4619VN::AK_INGAIN_3DB,
-  AK4619VN::AK_INGAIN_6DB,
-  AK4619VN::AK_INGAIN_9DB,
-  AK4619VN::AK_INGAIN_12DB,
-  AK4619VN::AK_INGAIN_15DB,
-  AK4619VN::AK_INGAIN_18DB,
-  AK4619VN::AK_INGAIN_21DB,
-  AK4619VN::AK_INGAIN_24DB,
-  AK4619VN::AK_INGAIN_27DB
-};
-
 uint8_t AK4619VN::inputGainChange(bool relative, bool ADC1L, bool ADC1R, bool ADC2L, bool ADC2R, int8_t gain){  
   uint8_t regvals[2] = {0};
-  uint8_t regval0 = 0;
-  uint8_t regval1 = 0;
+  int8_t gains[4] ={0};
   uint8_t error = 0;
-  
-  error = readRegMulti(MICGAIN1, 2, regvals); //Read output gain regvals
-  if(error){
-    return error;
-  }
-  
-  if( ADC1LGain_idx <= 0 )  ADC1LGain_idx = 0;
-  if( ADC1LGain_idx >= 12 )  ADC1LGain_idx = 12;
-  if( ADC1LGain_idx <= 0 )  ADC1LGain_idx = 12;
-  if( ADC1LGain_idx >= 12 ) ADC1LGain_idx = 12;
-  ADC1LGain_idx += gain;
-  ADC1LGain_idx += gain;
-  ADC1LGain_idx += gain;
-  ADC1LGain_idx += gain;
   
   if(relative){
     
-    regval0 = (ADC1L << 4 | ADC1R);
-    regval1 = (ADC2L << 4 | ADC2R);
-    
-    error = writeReg(MICGAIN1, regval0);
+    error = readRegMulti(MICGAIN1, 2, regvals); //Read input gain regvals
     if(error){
       return error;
     }
     
-    return (writeReg(MICGAIN2, regval1));
+    //Get current gains in regs
+    gains[0] = (regvals[0] >> 4) & 0x0F; // Shift right by 4 bits and mask with 0x0F
+    gains[1] = regvals[0] & 0x0F; // Mask with 0x0F to get the lower 4 bits
+    gains[2] = (regvals[1] >> 4) & 0x0F;
+    gains[3] = regvals[1] & 0x0F;
+    
+    if(ADC1L) gains[0] += gain;
+    if(ADC1R) gains[1] += gain;
+    if(ADC2L) gains[2] += gain;
+    if(ADC2R) gains[3] += gain;
+    
+    //Check for min/max
+    for(uint8_t i=0; i<=3;i++){
+      if (gains[i] < 0)
+        gains[i] = 0;
+      else if (gains[i] > 11)
+        gains[i] = 11;
+    }
+    
+    regvals[0] = ((uint8_t)gains[0] << 4 | (uint8_t)gains[1]);
+    regvals[1] = ((uint8_t)gains[2] << 4 | (uint8_t)gains[3]);
+    
+    error = writeReg(MICGAIN1, regvals[0]);
+    if(error){
+      return error;
+    }
+    
+    return (writeReg(MICGAIN2, regvals[1]));
     
   }
   else{
-    if(ADC1L){
-      modifyGainRange(gain, ADC1LGain_idx);
-      regval0 = (ADC1L << 4 | ADC1R);
+    
+    if (gain < 0)
+      gain = 0;
+    else if (gain > 11)
+      gain = 11;
+    
+    if(ADC1L) gains[0] = gain;
+    if(ADC1R) gains[1] = gain;
+    if(ADC2L) gains[2] = gain;
+    if(ADC2R) gains[3] = gain;
+    
+    regvals[0] = (gains[0] << 4 | gains[1]);
+    regvals[1] = (gains[2] << 4 | gains[3]);
+    
+    error = writeReg(MICGAIN1, regvals[0]);
+    if(error){
+      return error;
     }
+    
+    return (writeReg(MICGAIN2, regvals[1]));
+    
   }
   return 0;
 }
@@ -286,7 +270,6 @@ uint8_t AK4619VN::inputGainChange(bool relative, bool ADC1L, bool ADC1R, bool AD
 uint8_t AK4619VN::outputGain(bool relative, output_gain_t channel, int16_t gainVal){
   
   uint8_t regvals[4] = {0};
-  uint8_t regval = 0;
   uint8_t error = 0;
   
   if(relative){
@@ -423,7 +406,6 @@ uint8_t AK4619VN::outputGain(bool relative, output_gain_t channel, int16_t gainV
 uint8_t AK4619VN::inputConf(intput_conf_t ADC1L, intput_conf_t ADC1R, intput_conf_t ADC2L, intput_conf_t ADC2R){
   
   uint8_t regval = 0;
-  uint8_t error = 0;
   
   regval = ( ADC1L << 6 | ADC1R << 4 | ADC2L << 2 | ADC2R);
   
@@ -434,7 +416,6 @@ uint8_t AK4619VN::inputConf(intput_conf_t ADC1L, intput_conf_t ADC1R, intput_con
 uint8_t AK4619VN::outputConf(output_conf_t DAC2, output_conf_t DAC1){
   
   uint8_t regval = 0;
-  uint8_t error = 0;
   
   regval = ( DAC2 << 2 | DAC1);
   
@@ -452,7 +433,7 @@ uint8_t AK4619VN::printRegs(uint8_t startReg, uint8_t len){
   
   //TODO remove for DBG only
   for(int idx = 0; idx < len; idx++){
-    Serial.print(idx, HEX);
+    Serial.print(idx+startReg, HEX);
     Serial.print(": \t");
     
     for (int8_t i = 7; i >= 0; i--) {
@@ -524,7 +505,6 @@ uint8_t AK4619VN::readReg(uint8_t deviceReg, uint8_t * regVal) {
   m_i2c->beginTransmission(m_addr);
   m_i2c->write(deviceReg);
   m_i2c->endTransmission(true);
-  uint8_t t;
   
   uint8_t numbytes = 0;
   numbytes = m_i2c->requestFrom(m_addr, (uint8_t)1, (uint8_t)false);
